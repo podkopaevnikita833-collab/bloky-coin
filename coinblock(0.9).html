@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Гра з Босами</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            cursor: crosshair;
+        }
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 100;
+            background: rgba(0,0,0,0.6);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        #info div {
+            margin: 5px 0;
+        }
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: white;
+            font-size: 14px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 100;
+            background: rgba(0,0,0,0.6);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        #legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 14px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 100;
+            background: rgba(0,0,0,0.6);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        #legend div {
+            margin: 5px 0;
+        }
+        .red { color: #e74c3c; }
+        .purple { color: #9b59b6; }
+        .gold { color: #FFD700; }
+        .blue { color: #3498db; }
+        .green { color: #27ae60; }
+        .gray { color: #95a5a6; }
+        .orange { color: #e67e22; }
+        .black { color: #333; text-shadow: 0 0 5px #e74c3c; }
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 48px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 100;
+            display: none;
+            text-align: center;
+            background: rgba(0,0,0,0.8);
+            padding: 40px;
+            border-radius: 20px;
+        }
+        #gameOver button {
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 24px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        #gameOver button:hover {
+            background: #45a049;
+            transform: scale(1.1);
+        }
+        #warning {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: red;
+            font-size: 36px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 99;
+            display: none;
+            animation: pulse 0.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.1); }
+        }
+        #minimap {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid white;
+            border-radius: 10px;
+            z-index: 100;
+        }
+        #minimapCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 101;
+        }
+        #crosshair .line {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        #crosshair .h {
+            width: 20px;
+            height: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        #crosshair .h.left { right: 18px; }
+        #crosshair .h.right { left: 18px; }
+        #crosshair .v {
+            width: 2px;
+            height: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        #crosshair .v.top { bottom: 18px; }
+        #crosshair .v.bottom { top: 18px; }
+        #crosshair .dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: red;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        #ammo {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            color: white;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 100;
+            background: rgba(0,0,0,0.6);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+        #cameraMode {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 102;
+            display: none;
+            animation: fadeOut 1s forwards;
+        }
+        @keyframes fadeOut {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            70% { opacity: 1; }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        }
+        #reloadBar {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 10px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 5px;
+            z-index: 100;
+            display: none;
+        }
+        #reloadProgress {
+            width: 0%;
+            height: 100%;
+            background: #3498db;
+            border-radius: 5px;
+            transition: width 0.05s linear;
+        }
+        #hitMarker {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: red;
+            font-size: 40px;
+            font-weight: bold;
+            z-index: 102;
+            display: none;
+            animation: hitPulse 0.2s;
+        }
+        @keyframes hitPulse {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+        }
+        #viewIndicator {
+            position: absolute;
+            top: 160px;
+            left: 20px;
+            color: white;
+            font-size: 16px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 100;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+        #bossHealth {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            z-index: 100;
+            display: none;
+            text-align: center;
+        }
+        #bossName {
+            color: #e74c3c;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #000, 0 0 20px #e74c3c;
+            margin-bottom: 10px;
+        }
+        #bossHealthBar {
+            width: 100%;
+            height: 25px;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid #e74c3c;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+        }
+        #bossHealthFill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #c0392b, #e74c3c, #c0392b);
+            transition: width 0.3s;
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.3);
+        }
+        #bossHealthText {
+            color: white;
+            font-size: 14px;
+            margin-top: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        #bossWarning {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #e74c3c;
+            font-size: 72px;
+            font-weight: bold;
+            text-shadow: 0 0 20px #000, 0 0 40px #e74c3c;
+            z-index: 103;
+            display: none;
+            animation: bossAppear 3s forwards;
+        }
+        @keyframes bossAppear {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            40% { transform: translate(-50%, -50%) scale(1); }
+            80% { opacity: 1; }
+            100% { opacity: 0; display: none; }
+        }
+        #bossWarning span {
+            display: block;
+            font-size: 36px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <div>🪙 Монети: <span id="score">0</span></div>
+        <div>❤️ Життя: <span id="lives">5</span></div>
+        <div>⏱️ Час: <span id="time">0</span>с</div>
+        <div>🏆 Рівень: <span id="level">1</span></div>
+        <div>💀 Вбито: <span id="kills">0</span></div>
+        <div>👹 Босів: <span id="bossKills">0</span></div>
+    </div>
+    
+    <div id="viewIndicator">📷 Вид: <span id="viewMode">3-тя особа</span></div>
+    
+    <div id="legend">
+        <div><strong>🗺️ Легенда:</strong></div>
+        <div class="red">🔴 Мисливець (3❤️)</div>
+        <div class="purple">🟣 Розвідник (3❤️)</div>
+        <div class="black">⬛ БОСС (21❤️)</div>
+        <div class="gold">🪙 Монета</div>
+        <div class="blue">🔵 Гравець</div>
+        <div class="green">🌲 Дерево</div>
+        <div class="gray">🪨 Камінь</div>
+    </div>
+    
+    <div id="instructions">
+        🎮 WASD - рух | Пробіл - стрибок | Shift - спринт | ЛКМ - стріляти | R - перезарядка | C - камера
+    </div>
+    
+    <div id="ammo">🏹 <span id="arrowCount">10</span> / <span id="maxArrows">10</span></div>
+    
+    <div id="bossHealth">
+        <div id="bossName">👹 ТЕМНИЙ ВЛАДИКА 👹</div>
+        <div id="bossHealthBar">
+            <div id="bossHealthFill"></div>
+        </div>
+        <div id="bossHealthText">21 / 21</div>
+    </div>
+    
+    <div id="bossWarning">
+        ⚠️ БОСС ⚠️
+        <span>ТЕМНИЙ ВЛАДИКА ПРИБУВ!</span>
+    </div>
+    
+    <div id="reloadBar">
+        <div id="reloadProgress"></div>
+    </div>
+    
+    <div id="warning">⚠️ НЕБЕЗПЕКА!</div>
+    <div id="hitMarker">✕</div>
+    <div id="cameraMode">📷 Перша особа</div>
+    
+    <div id="crosshair">
+        <div class="line h left"></div>
+        <div class="line h right"></div>
+        <div class="line v top"></div>
+        <div class="line v bottom"></div>
+        <div class="dot"></div>
+    </div>
+    
+    <div id="minimap">
+        <canvas id="minimapCanvas"></canvas>
+    </div>
+    
+    <div id="gameOver">
+        <div id="gameOverText">Гра закінчена!</div>
+        <div>Монети: <span id="finalScore">0</span></div>
+        <div style="font-size: 24px;">Вбито ворогів: <span id="finalKills">0</span></div>
+        <div style="font-size: 24px;">Босів переможено: <span id="finalBossKills">0</span></div>
+        <div style="font-size: 24px;">Рівень: <span id="finalLevel">1</span></div>
+        <button onclick="restartGame()">Грати знову</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Основні змінні
+        let scene, camera, renderer;
+        let player, ground, bow, bowPivot, fpsBow;
+        let coins = [];
+        let enemies = [];
+        let trees = [];
+        let rocks = [];
+        let arrows = [];
+        let obstacles = [];
+        let boss = null;
+        let bossKills = 0;
+        let isBossFight = false;
+        let originalSkyColor = 0x87CEEB;
+        let originalFogColor = 0x87CEEB;
+        let score = 0;
+        let lives = 5;
+        let level = 1;
+        let kills = 0;
+        let gameTime = 0;
+        let isGameOver = false;
+        let isJumping = false;
+        let velocityY = 0;
+        const gravity = 0.015;
+        const jumpForce = 0.35;
+        
+        // Камера
+        let isFirstPerson = false;
+        let cameraYaw = 0;
+        let cameraPitch = 0;
+        const maxPitch = Math.PI / 3;
+        let isPointerLocked = false;
+        
+        // Стрільба
+        let arrowCount = 10;
+        let maxArrows = 10;
+        let isReloading = false;
+        let reloadTime = 2000;
+        let shootCooldown = 0;
+        const shootDelay = 250;
+        
+        // Мишка
+        let mouse = new THREE.Vector2();
+        let mouseWorld = new THREE.Vector3();
+        let raycaster = new THREE.Raycaster();
+        let groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+        
+        // Мінімапа
+        let minimapCanvas, minimapCtx;
+        
+        // Типи ворогів
+        const ENEMY_TYPES = {
+            HUNTER: {
+                color: 0xe74c3c,
+                speed: 0.04,
+                detectionRange: 15,
+                behavior: 'chase',
+                name: 'Мисливець',
+                health: 3
+            },
+            SCOUT: {
+                color: 0x9b59b6,
+                speed: 0.025,
+                detectionRange: 25,
+                behavior: 'predict',
+                name: 'Розвідник',
+                health: 3
+            }
+        };
+        
+        // Тип боса
+        const BOSS_TYPE = {
+            color: 0x111111,
+            eyeColor: 0xe74c3c,
+            speed: 0.035,
+            detectionRange: 50,
+            behavior: 'boss',
+            name: 'Темний Владика',
+            health: 21,
+            size: 4,
+            damage: 2
+        };
+        
+        // Керування
+        const keys = {
+            w: false, a: false, s: false, d: false,
+            ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false,
+            ' ': false, Shift: false, r: false
+        };
+        
+        // Історія руху
+        let playerHistory = [];
+        const historyLength = 30;
+        
+        function init() {
+            // Мінімапа
+            minimapCanvas = document.getElementById('minimapCanvas');
+            minimapCanvas.width = 150;
+            minimapCanvas.height = 150;
+            minimapCtx = minimapCanvas.getContext('2d');
+            
+            // Сцена
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(originalSkyColor);
+            scene.fog = new THREE.Fog(originalFogColor, 40, 100);
+            
+            // Камера
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 12, 18);
+            camera.lookAt(0, 0, 0);
+            
+            // Рендерер
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.body.appendChild(renderer.domElement);
+            
+            // Освітлення
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(30, 50, 30);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 4096;
+            directionalLight.shadow.mapSize.height = 4096;
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 150;
+            directionalLight.shadow.camera.left = -60;
+            directionalLight.shadow.camera.right = 60;
+            directionalLight.shadow.camera.top = 60;
+            directionalLight.shadow.camera.bottom = -60;
+            scene.add(directionalLight);
+            
+            const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x228B22, 0.3);
+            scene.add(hemiLight);
+            
+            // Земля
+            const groundGeometry = new THREE.PlaneGeometry(100, 100, 50, 50);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x228B22,
+                roughness: 0.9,
+                metalness: 0.1
+            });
+            ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            
+            const vertices = ground.geometry.attributes.position.array;
+            for (let i = 0; i < vertices.length; i += 3) {
+                vertices[i + 2] += Math.random() * 0.2;
+            }
+            ground.geometry.attributes.position.needsUpdate = true;
+            ground.geometry.computeVertexNormals();
+            
+            // Гравець
+            const playerGeometry = new THREE.BoxGeometry(1, 1, 1);
+            const playerMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x3498db,
+                metalness: 0.5,
+                roughness: 0.3,
+                emissive: 0x3498db,
+                emissiveIntensity: 0.2
+            });
+            player = new THREE.Mesh(playerGeometry, playerMaterial);
+            player.position.y = 0.5;
+            player.castShadow = true;
+            scene.add(player);
+            
+            const playerLight = new THREE.PointLight(0x3498db, 0.5, 8);
+            player.add(playerLight);
+            
+            createBow();
+            createFPSBow();
+            
+            createTrees(25);
+            createRocks(30);
+            createCoins(15);
+            createEnemies(5);
+            
+            // Події
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mousedown', onMouseDown);
+            document.addEventListener('pointerlockchange', onPointerLockChange);
+            window.addEventListener('resize', onWindowResize);
+            
+            // Таймер
+            setInterval(() => {
+                if (!isGameOver) {
+                    gameTime++;
+                    document.getElementById('time').textContent = gameTime;
+                    
+                    if (gameTime % 30 === 0) {
+                        levelUp();
+                    }
+                }
+            }, 1000);
+            
+            animate();
+        }
+        
+        function setDarkMode(dark) {
+            if (dark) {
+                // Темне небо для боса
+                scene.background = new THREE.Color(0x0a0a0a);
+                scene.fog.color = new THREE.Color(0x0a0a0a);
+                scene.fog.near = 20;
+                scene.fog.far = 60;
+                
+                // Змінити землю на темнішу
+                ground.material.color.setHex(0x1a2a1a);
+            } else {
+                // Повернути нормальне небо
+                scene.background = new THREE.Color(originalSkyColor);
+                scene.fog.color = new THREE.Color(originalFogColor);
+                scene.fog.near = 40;
+                scene.fog.far = 100;
+                
+                ground.material.color.setHex(0x228B22);
+            }
+        }
+        
+        function spawnBoss() {
+            if (boss) return; // Бос вже є
+            
+            isBossFight = true;
+            setDarkMode(true);
+            
+            // Показати попередження
+            const bossWarning = document.getElementById('bossWarning');
+            bossWarning.style.display = 'block';
+            setTimeout(() => {
+                bossWarning.style.display = 'none';
+            }, 3000);
+            
+            const size = BOSS_TYPE.size;
+            
+            // Тіло боса
+            const bossGeometry = new THREE.BoxGeometry(size, size, size);
+            const bossMaterial = new THREE.MeshStandardMaterial({ 
+                color: BOSS_TYPE.color,
+                metalness: 0.6,
+                roughness: 0.4,
+                emissive: 0x330000,
+                emissiveIntensity: 0.3
+            });
+            
+            boss = new THREE.Mesh(bossGeometry, bossMaterial);
+            
+            // Спавн далеко від гравця
+            let angle = Math.random() * Math.PI * 2;
+            let distance = 35;
+            boss.position.set(
+                Math.cos(angle) * distance,
+                size / 2,
+                Math.sin(angle) * distance
+            );
+            
+            boss.castShadow = true;
+            boss.receiveShadow = true;
+            
+            // Червоні очі
+            const eyeGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+            const eyeMaterial = new THREE.MeshBasicMaterial({ 
+                color: BOSS_TYPE.eyeColor,
+                emissive: BOSS_TYPE.eyeColor,
+                emissiveIntensity: 1
+            });
+            
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.8, 0.5, size/2 + 0.1);
+            boss.add(leftEye);
+            
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(0.8, 0.5, size/2 + 0.1);
+            boss.add(rightEye);
+            
+            // Світло очей
+            const leftEyeLight = new THREE.PointLight(BOSS_TYPE.eyeColor, 2, 10);
+            leftEye.add(leftEyeLight);
+            
+            const rightEyeLight = new THREE.PointLight(BOSS_TYPE.eyeColor, 2, 10);
+            rightEye.add(rightEyeLight);
+            
+            // Зіниці
+            const pupilGeometry = new THREE.SphereGeometry(0.2, 8, 8);
+            const pupilMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            
+            const leftPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+            leftPupil.position.set(0, 0, 0.35);
+            leftEye.add(leftPupil);
+            
+            const rightPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+            rightPupil.position.set(0, 0, 0.35);
+            rightEye.add(rightPupil);
+            
+            // Роги
+            const hornGeometry = new THREE.ConeGeometry(0.3, 1.5, 8);
+            const hornMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x2a2a2a,
+                roughness: 0.5
+            });
+            
+            const leftHorn = new THREE.Mesh(hornGeometry, hornMaterial);
+            leftHorn.position.set(-1, size/2 + 0.5, 0);
+            leftHorn.rotation.z = 0.3;
+            boss.add(leftHorn);
+            
+            const rightHorn = new THREE.Mesh(hornGeometry, hornMaterial);
+            rightHorn.position.set(1, size/2 + 0.5, 0);
+            rightHorn.rotation.z = -0.3;
+            boss.add(rightHorn);
+            
+            // Аура боса
+            const auraGeometry = new THREE.RingGeometry(size, size + 1, 32);
+            const auraMaterial = new THREE.MeshBasicMaterial({ 
+                color: BOSS_TYPE.eyeColor,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+            const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+            aura.rotation.x = -Math.PI / 2;
+            aura.position.y = -size/2 + 0.1;
+            aura.name = 'aura';
+            boss.add(aura);
+            
+            // ШІ параметри боса
+            boss.userData = {
+                type: BOSS_TYPE,
+                size: size,
+                speed: BOSS_TYPE.speed,
+                detectionRange: BOSS_TYPE.detectionRange,
+                behavior: 'boss',
+                state: 'chase',
+                health: BOSS_TYPE.health,
+                maxHealth: BOSS_TYPE.health,
+                hit: false,
+                attackCooldown: 0,
+                chargeTimer: 0,
+                isCharging: false,
+                phaseChangeHP: [14, 7], // Зміна фази на цих HP
+                phase: 1,
+                isBoss: true
+            };
+            
+            scene.add(boss);
+            
+            // Показати HP бар боса
+            document.getElementById('bossHealth').style.display = 'block';
+            updateBossHealthUI();
+        }
+        
+        function updateBossHealthUI() {
+            if (!boss) return;
+            
+            const healthPercent = (boss.userData.health / boss.userData.maxHealth) * 100;
+            document.getElementById('bossHealthFill').style.width = healthPercent + '%';
+            document.getElementById('bossHealthText').textContent = 
+                `${boss.userData.health} / ${boss.userData.maxHealth}`;
+        }
+        
+        function updateBossAI() {
+            if (!boss) return;
+            
+            const data = boss.userData;
+            const distanceToPlayer = boss.position.distanceTo(player.position);
+            
+            // Фази боса
+            if (data.health <= 14 && data.phase === 1) {
+                data.phase = 2;
+                data.speed = BOSS_TYPE.speed * 1.3;
+                boss.material.emissiveIntensity = 0.5;
+            }
+            if (data.health <= 7 && data.phase === 2) {
+                data.phase = 3;
+                data.speed = BOSS_TYPE.speed * 1.6;
+                boss.material.emissiveIntensity = 0.8;
+                boss.material.emissive.setHex(0x660000);
+            }
+            
+            // Атака ривком
+            if (data.chargeTimer > 0) {
+                data.chargeTimer--;
+            }
+            
+            if (distanceToPlayer < 20 && data.chargeTimer <= 0 && !data.isCharging && Math.random() < 0.01) {
+                data.isCharging = true;
+                data.chargeDirection = new THREE.Vector3();
+                data.chargeDirection.subVectors(player.position, boss.position);
+                data.chargeDirection.y = 0;
+                data.chargeDirection.normalize();
+                data.chargeTime = 30;
+            }
+            
+            let currentSpeed = data.speed;
+            let targetPosition = new THREE.Vector3();
+            
+            if (data.isCharging) {
+                // Ривок
+                currentSpeed = data.speed * 4;
+                targetPosition.copy(boss.position);
+                targetPosition.add(data.chargeDirection.clone().multiplyScalar(currentSpeed));
+                
+                data.chargeTime--;
+                if (data.chargeTime <= 0) {
+                    data.isCharging = false;
+                    data.chargeTimer = 120; // Кулдаун
+                }
+                
+                // Ефект ривка
+                boss.material.emissiveIntensity = 1;
+            } else {
+                targetPosition.copy(player.position);
+                boss.material.emissiveIntensity = 0.3 + data.phase * 0.2;
+            }
+            
+            // Рух до гравця
+            const direction = new THREE.Vector3();
+            direction.subVectors(targetPosition, boss.position);
+            direction.y = 0;
+            direction.normalize();
+            
+            const newPosition = new THREE.Vector3();
+            newPosition.copy(boss.position);
+            newPosition.x += direction.x * currentSpeed;
+            newPosition.z += direction.z * currentSpeed;
+            
+            // Перевірка колізій (бос ламає камені!)
+            const collision = checkObstacleCollision(newPosition, data.size / 2);
+            if (collision && collision.userData.type === 'rock') {
+                // Знищити камінь
+                scene.remove(collision);
+                const rockIndex = rocks.indexOf(collision);
+                if (rockIndex > -1) rocks.splice(rockIndex, 1);
+                const obsIndex = obstacles.indexOf(collision);
+                if (obsIndex > -1) obstacles.splice(obsIndex, 1);
+                
+                createDeathEffect(collision.position);
+            }
+            
+            if (!collision || collision.userData.type === 'rock') {
+                boss.position.x = newPosition.x;
+                boss.position.z = newPosition.z;
+            } else {
+                // Обхід дерев
+                const avoidDir = getAvoidanceDirection(boss.position, collision);
+                boss.position.x += avoidDir.x * currentSpeed;
+                boss.position.z += avoidDir.z * currentSpeed;
+            }
+            
+            // Обертання до гравця
+            if (direction.length() > 0) {
+                const angle = Math.atan2(direction.x, direction.z);
+                boss.rotation.y = angle;
+            }
+            
+            // Обмеження
+            boss.position.x = Math.max(-45, Math.min(45, boss.position.x));
+            boss.position.z = Math.max(-45, Math.min(45, boss.position.z));
+            
+            // Анімація
+            const breathe = Math.sin(Date.now() * 0.003) * 0.1;
+            boss.scale.y = 1 + breathe;
+            boss.position.y = data.size / 2 + Math.abs(Math.sin(Date.now() * 0.008)) * 0.5;
+            
+            // Обертання аури
+            const aura = boss.getObjectByName('aura');
+            if (aura) {
+                aura.rotation.z += 0.02;
+                aura.material.opacity = 0.2 + Math.sin(Date.now() * 0.005) * 0.15;
+            }
+            
+            // Атака гравця
+            const attackRange = data.size / 2 + 1;
+            if (distanceToPlayer < attackRange && !data.hit) {
+                data.hit = true;
+                lives -= BOSS_TYPE.damage;
+                document.getElementById('lives').textContent = lives;
+                
+                player.material.color.setHex(0xff0000);
+                player.material.emissive.setHex(0xff0000);
+                
+                // Сильне відштовхування
+                const pushDirection = new THREE.Vector3();
+                pushDirection.subVectors(player.position, boss.position);
+                pushDirection.normalize();
+                
+                const pushDist = 8;
+                const newPosX = player.position.x + pushDirection.x * pushDist;
+                const newPosZ = player.position.z + pushDirection.z * pushDist;
+                
+                if (!checkObstacleCollision(new THREE.Vector3(newPosX, 0.5, newPosZ), 0.5)) {
+                    player.position.x = newPosX;
+                    player.position.z = newPosZ;
+                }
+                
+                setTimeout(() => {
+                    player.material.color.setHex(0x3498db);
+                    player.material.emissive.setHex(0x3498db);
+                    if (boss) data.hit = false;
+                }, 1500);
+                
+                if (lives <= 0) gameOver();
+            }
+        }
+        
+        function killBoss() {
+            if (!boss) return;
+            
+            // Епічна смерть боса
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    if (boss) createDeathEffect(boss.position);
+                }, i * 50);
+            }
+            
+            scene.remove(boss);
+            boss = null;
+            isBossFight = false;
+            bossKills++;
+            document.getElementById('bossKills').textContent = bossKills;
+            document.getElementById('bossHealth').style.display = 'none';
+            
+            // Повернути світле небо
+            setDarkMode(false);
+            
+            // Бонуси за вбивство боса
+            score += 50;
+            document.getElementById('score').textContent = score;
+            lives = Math.min(lives + 3, 10);
+            document.getElementById('lives').textContent = lives;
+            maxArrows += 5;
+            document.getElementById('maxArrows').textContent = maxArrows;
+        }
+        
+        function onKeyDown(e) {
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
+            if (e.key === 'r' || e.key === 'R') reload();
+            if (e.key === 'c' || e.key === 'C') toggleCamera();
+        }
+        
+        function onKeyUp(e) {
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
+        }
+        
+        function toggleCamera() {
+            isFirstPerson = !isFirstPerson;
+            
+            const cameraModeEl = document.getElementById('cameraMode');
+            const viewModeEl = document.getElementById('viewMode');
+            
+            if (isFirstPerson) {
+                cameraModeEl.textContent = '👁️ Перша особа';
+                viewModeEl.textContent = '1-ша особа';
+                renderer.domElement.requestPointerLock();
+                player.visible = false;
+                bowPivot.visible = false;
+                fpsBow.visible = true;
+                camera.fov = 90;
+                camera.updateProjectionMatrix();
+            } else {
+                cameraModeEl.textContent = '📷 Третя особа';
+                viewModeEl.textContent = '3-тя особа';
+                document.exitPointerLock();
+                player.visible = true;
+                bowPivot.visible = true;
+                fpsBow.visible = false;
+                camera.fov = 75;
+                camera.updateProjectionMatrix();
+                cameraYaw = 0;
+                cameraPitch = 0;
+            }
+            
+            cameraModeEl.style.display = 'block';
+            cameraModeEl.style.animation = 'none';
+            cameraModeEl.offsetHeight;
+            cameraModeEl.style.animation = 'fadeOut 1s forwards';
+            
+            setTimeout(() => {
+                cameraModeEl.style.display = 'none';
+            }, 1000);
+        }
+        
+        function onPointerLockChange() {
+            isPointerLocked = document.pointerLockElement === renderer.domElement;
+        }
+        
+        function createBow() {
+            bowPivot = new THREE.Group();
+            player.add(bowPivot);
+            
+            bow = new THREE.Group();
+            
+            const bowCurve = new THREE.QuadraticBezierCurve3(
+                new THREE.Vector3(0, -0.8, 0),
+                new THREE.Vector3(0.6, 0, 0),
+                new THREE.Vector3(0, 0.8, 0)
+            );
+            const bowTubeGeometry = new THREE.TubeGeometry(bowCurve, 20, 0.05, 8, false);
+            const bowMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x8B4513,
+                roughness: 0.7
+            });
+            const bowMesh = new THREE.Mesh(bowTubeGeometry, bowMaterial);
+            bow.add(bowMesh);
+            
+            const stringGeometry = new THREE.BufferGeometry();
+            const stringPoints = [
+                new THREE.Vector3(0, -0.8, 0),
+                new THREE.Vector3(-0.1, 0, 0),
+                new THREE.Vector3(0, 0.8, 0)
+            ];
+            stringGeometry.setFromPoints(stringPoints);
+            const stringMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+            const string = new THREE.Line(stringGeometry, stringMaterial);
+            bow.add(string);
+            
+            const arrowOnBow = createArrowMesh();
+            arrowOnBow.position.set(-0.1, 0, 0);
+            arrowOnBow.rotation.z = Math.PI / 2;
+            arrowOnBow.scale.set(0.5, 0.5, 0.5);
+            bow.add(arrowOnBow);
+            
+            bow.position.set(0.8, 0.3, 0);
+            bowPivot.add(bow);
+        }
+        
+        function createFPSBow() {
+            fpsBow = new THREE.Group();
+            
+            const bowCurve = new THREE.QuadraticBezierCurve3(
+                new THREE.Vector3(0, -0.5, 0),
+                new THREE.Vector3(0.4, 0, 0),
+                new THREE.Vector3(0, 0.5, 0)
+            );
+            const bowTubeGeometry = new THREE.TubeGeometry(bowCurve, 20, 0.03, 8, false);
+            const bowMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x8B4513,
+                roughness: 0.7
+            });
+            const bowMesh = new THREE.Mesh(bowTubeGeometry, bowMaterial);
+            fpsBow.add(bowMesh);
+            
+            const stringGeometry = new THREE.BufferGeometry();
+            const stringPoints = [
+                new THREE.Vector3(0, -0.5, 0),
+                new THREE.Vector3(-0.08, 0, 0),
+                new THREE.Vector3(0, 0.5, 0)
+            ];
+            stringGeometry.setFromPoints(stringPoints);
+            const stringMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+            const string = new THREE.Line(stringGeometry, stringMaterial);
+            fpsBow.add(string);
+            
+            const arrowOnBow = createArrowMesh();
+            arrowOnBow.position.set(-0.08, 0, 0);
+            arrowOnBow.rotation.z = Math.PI / 2;
+            arrowOnBow.scale.set(0.4, 0.4, 0.4);
+            fpsBow.add(arrowOnBow);
+            
+            const handGeometry = new THREE.BoxGeometry(0.15, 0.3, 0.1);
+            const handMaterial = new THREE.MeshStandardMaterial({ color: 0xffdbac });
+            const hand = new THREE.Mesh(handGeometry, handMaterial);
+            hand.position.set(0.1, -0.3, 0);
+            fpsBow.add(hand);
+            
+            fpsBow.visible = false;
+            camera.add(fpsBow);
+            scene.add(camera);
+            
+            fpsBow.position.set(0.4, -0.3, -0.6);
+            fpsBow.rotation.z = -0.2;
+        }
+        
+        function createArrowMesh() {
+            const arrowGroup = new THREE.Group();
+            
+            const shaftGeometry = new THREE.CylinderGeometry(0.03, 0.03, 1.2, 8);
+            const shaftMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+            const shaft = new THREE.Mesh(shaftGeometry, shaftMaterial);
+            shaft.rotation.z = Math.PI / 2;
+            arrowGroup.add(shaft);
+            
+            const tipGeometry = new THREE.ConeGeometry(0.06, 0.2, 8);
+            const tipMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x888888,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+            const tip = new THREE.Mesh(tipGeometry, tipMaterial);
+            tip.rotation.z = -Math.PI / 2;
+            tip.position.set(0.7, 0, 0);
+            arrowGroup.add(tip);
+            
+            const featherGeometry = new THREE.BoxGeometry(0.3, 0.15, 0.02);
+            const featherMaterial = new THREE.MeshStandardMaterial({ color: 0xe74c3c });
+            
+            for (let i = 0; i < 3; i++) {
+                const feather = new THREE.Mesh(featherGeometry, featherMaterial);
+                feather.position.set(-0.5, 0, 0);
+                feather.rotation.x = (i * Math.PI * 2) / 3;
+                arrowGroup.add(feather);
+            }
+            
+            return arrowGroup;
+        }
+        
+        function shootArrow() {
+            if (arrowCount <= 0 || isReloading || shootCooldown > 0) return;
+            
+            arrowCount--;
+            document.getElementById('arrowCount').textContent = arrowCount;
+            shootCooldown = shootDelay;
+            
+            const arrow = createArrowMesh();
+            
+            if (isFirstPerson) {
+                arrow.position.copy(camera.position);
+                const direction = new THREE.Vector3(0, 0, -1);
+                direction.applyQuaternion(camera.quaternion);
+                
+                arrow.userData = {
+                    velocity: direction.multiplyScalar(0.8),
+                    lifetime: 180,
+                    damage: 1
+                };
+                
+                arrow.quaternion.copy(camera.quaternion);
+                arrow.rotateY(Math.PI / 2);
+            } else {
+                arrow.position.copy(player.position);
+                arrow.position.y += 0.5;
+                
+                const direction = new THREE.Vector3();
+                direction.subVectors(mouseWorld, arrow.position);
+                direction.y = 0;
+                direction.normalize();
+                
+                const angle = Math.atan2(direction.x, direction.z);
+                arrow.rotation.y = angle + Math.PI / 2;
+                
+                arrow.userData = {
+                    velocity: direction.multiplyScalar(0.8),
+                    lifetime: 180,
+                    damage: 1
+                };
+            }
+            
+            scene.add(arrow);
+            arrows.push(arrow);
+            
+            if (isFirstPerson) {
+                fpsBow.position.z = -0.5;
+                setTimeout(() => { fpsBow.position.z = -0.6; }, 100);
+            } else {
+                bow.rotation.z = -0.2;
+                setTimeout(() => { bow.rotation.z = 0; }, 100);
+            }
+            
+            if (arrowCount === 0) reload();
+        }
+        
+        function reload() {
+            if (isReloading || arrowCount === maxArrows) return;
+            
+            isReloading = true;
+            document.getElementById('reloadBar').style.display = 'block';
+            
+            let progress = 0;
+            const reloadInterval = setInterval(() => {
+                progress += 50;
+                document.getElementById('reloadProgress').style.width = (progress / reloadTime * 100) + '%';
+                
+                if (progress >= reloadTime) {
+                    clearInterval(reloadInterval);
+                    arrowCount = maxArrows;
+                    document.getElementById('arrowCount').textContent = arrowCount;
+                    document.getElementById('reloadBar').style.display = 'none';
+                    document.getElementById('reloadProgress').style.width = '0%';
+                    isReloading = false;
+                }
+            }, 50);
+        }
+        
+        function updateArrows() {
+            for (let i = arrows.length - 1; i >= 0; i--) {
+                const arrow = arrows[i];
+                const data = arrow.userData;
+                
+                arrow.position.add(data.velocity);
+                data.velocity.y -= 0.005;
+                
+                if (data.velocity.length() > 0.01) {
+                    const dir = data.velocity.clone().normalize();
+                    const angle = Math.atan2(dir.x, dir.z);
+                    arrow.rotation.y = angle + Math.PI / 2;
+                    arrow.rotation.z = -Math.asin(dir.y);
+                }
+                
+                data.lifetime--;
+                
+                // Перевірка попадання в боса
+                if (boss) {
+                    const distToBoss = arrow.position.distanceTo(boss.position);
+                    if (distToBoss < boss.userData.size / 2 + 0.3) {
+                        boss.userData.health -= data.damage;
+                        showHitMarker();
+                        
+                        boss.material.emissiveIntensity = 1;
+                        setTimeout(() => {
+                            if (boss) boss.material.emissiveIntensity = 0.3 + boss.userData.phase * 0.2;
+                        }, 100);
+                        
+                        updateBossHealthUI();
+                        
+                        scene.remove(arrow);
+                        arrows.splice(i, 1);
+                        
+                        if (boss.userData.health <= 0) {
+                            killBoss();
+                        }
+                        continue;
+                    }
+                }
+                
+                // Перевірка попадання в ворогів
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    const enemy = enemies[j];
+                    const dist = arrow.position.distanceTo(enemy.position);
+                    
+                    if (dist < enemy.userData.size / 2 + 0.3) {
+                        enemy.userData.health -= data.damage;
+                        showHitMarker();
+                        
+                        enemy.material.emissiveIntensity = 1;
+                        setTimeout(() => {
+                            if (enemy.material) enemy.material.emissiveIntensity = 0.2;
+                        }, 100);
+                        
+                        updateEnemyHealthBar(enemy);
+                        
+                        scene.remove(arrow);
+                        arrows.splice(i, 1);
+                        
+                        if (enemy.userData.health <= 0) {
+                            createDeathEffect(enemy.position);
+                            scene.remove(enemy);
+                            enemies.splice(j, 1);
+                            kills++;
+                            document.getElementById('kills').textContent = kills;
+                            
+                            if (kills % 5 === 0) {
+                                maxArrows += 2;
+                                document.getElementById('maxArrows').textContent = maxArrows;
+                            }
+                        }
+                        break;
+                    }
+                }
+                
+                const collision = checkObstacleCollision(arrow.position, 0.1);
+                if (collision) {
+                    scene.remove(arrow);
+                    arrows.splice(i, 1);
+                    continue;
+                }
+                
+                if (data.lifetime <= 0 || arrow.position.y < 0 || 
+                    Math.abs(arrow.position.x) > 50 || Math.abs(arrow.position.z) > 50) {
+                    scene.remove(arrow);
+                    arrows.splice(i, 1);
+                }
+            }
+        }
+        
+        function showHitMarker() {
+            const hitMarker = document.getElementById('hitMarker');
+            hitMarker.style.display = 'block';
+            hitMarker.style.animation = 'none';
+            hitMarker.offsetHeight;
+            hitMarker.style.animation = 'hitPulse 0.2s';
+            setTimeout(() => { hitMarker.style.display = 'none'; }, 200);
+        }
+        
+        function updateEnemyHealthBar(enemy) {
+            const oldBar = enemy.getObjectByName('healthBar');
+            if (oldBar) enemy.remove(oldBar);
+            
+            const barGroup = new THREE.Group();
+            barGroup.name = 'healthBar';
+            
+            const bgGeometry = new THREE.PlaneGeometry(1.2, 0.15);
+            const bgMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
+            const bg = new THREE.Mesh(bgGeometry, bgMaterial);
+            barGroup.add(bg);
+            
+            const healthPercent = enemy.userData.health / enemy.userData.maxHealth;
+            const healthGeometry = new THREE.PlaneGeometry(1.1 * healthPercent, 0.1);
+            const healthColor = healthPercent > 0.5 ? 0x27ae60 : healthPercent > 0.25 ? 0xf39c12 : 0xe74c3c;
+            const healthMaterial = new THREE.MeshBasicMaterial({ color: healthColor });
+            const healthBar = new THREE.Mesh(healthGeometry, healthMaterial);
+            healthBar.position.x = -1.1 * (1 - healthPercent) / 2;
+            healthBar.position.z = 0.01;
+            barGroup.add(healthBar);
+            
+            barGroup.position.y = enemy.userData.size / 2 + 0.5;
+            enemy.add(barGroup);
+        }
+        
+        function createDeathEffect(position) {
+            const particleCount = 20;
+            const particles = [];
+            
+            for (let i = 0; i < particleCount; i++) {
+                const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: Math.random() > 0.5 ? 0xe74c3c : 0x9b59b6 
+                });
+                const particle = new THREE.Mesh(geometry, material);
+                particle.position.copy(position);
+                particle.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.3,
+                        Math.random() * 0.3,
+                        (Math.random() - 0.5) * 0.3
+                    ),
+                    lifetime: 60
+                };
+                scene.add(particle);
+                particles.push(particle);
+            }
+            
+            function animateParticles() {
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.position.add(p.userData.velocity);
+                    p.userData.velocity.y -= 0.01;
+                    p.rotation.x += 0.1;
+                    p.rotation.y += 0.1;
+                    p.userData.lifetime--;
+                    
+                    if (p.userData.lifetime <= 0 || p.position.y < 0) {
+                        scene.remove(p);
+                        particles.splice(i, 1);
+                    }
+                }
+                if (particles.length > 0) requestAnimationFrame(animateParticles);
+            }
+            animateParticles();
+        }
+        
+        function onMouseMove(event) {
+            if (isFirstPerson && isPointerLocked) {
+                const sensitivity = 0.002;
+                cameraYaw -= event.movementX * sensitivity;
+                cameraPitch -= event.movementY * sensitivity;
+                cameraPitch = Math.max(-maxPitch, Math.min(maxPitch, cameraPitch));
+            } else {
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            }
+        }
+        
+        function onMouseDown(event) {
+            if (event.button === 0 && !isGameOver) {
+                if (isFirstPerson && !isPointerLocked) {
+                    renderer.domElement.requestPointerLock();
+                } else {
+                    shootArrow();
+                }
+            }
+        }
+        
+        function updateBowRotation() {
+            if (isFirstPerson) return;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersectPoint = new THREE.Vector3();
+            raycaster.ray.intersectPlane(groundPlane, intersectPoint);
+            
+            if (intersectPoint) {
+                mouseWorld.copy(intersectPoint);
+                const direction = new THREE.Vector3();
+                direction.subVectors(mouseWorld, player.position);
+                direction.y = 0;
+                const angle = Math.atan2(direction.x, direction.z);
+                bowPivot.rotation.y = angle + Math.PI / 2;
+            }
+        }
+        
+        function createTrees(count) {
+            for (let i = 0; i < count; i++) {
+                const treeGroup = new THREE.Group();
+                
+                const trunkHeight = 2 + Math.random() * 3;
+                const trunkRadius = 0.3 + Math.random() * 0.3;
+                const crownRadius = 1.5 + Math.random() * 2;
+                const crownHeight = 3 + Math.random() * 2;
+                
+                const trunkGeometry = new THREE.CylinderGeometry(trunkRadius * 0.7, trunkRadius, trunkHeight, 8);
+                const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.9 });
+                const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                trunk.position.y = trunkHeight / 2;
+                trunk.castShadow = true;
+                trunk.receiveShadow = true;
+                treeGroup.add(trunk);
+                
+                const crownColors = [0x228B22, 0x2E8B2E, 0x32CD32, 0x006400];
+                const layers = 2 + Math.floor(Math.random() * 2);
+                
+                for (let j = 0; j < layers; j++) {
+                    const layerRadius = crownRadius * (1 - j * 0.2);
+                    const layerHeight = crownHeight * (1 - j * 0.15);
+                    const crownGeometry = new THREE.ConeGeometry(layerRadius, layerHeight, 8);
+                    const crownMaterial = new THREE.MeshStandardMaterial({ 
+                        color: crownColors[Math.floor(Math.random() * crownColors.length)],
+                        roughness: 0.8
+                    });
+                    const crown = new THREE.Mesh(crownGeometry, crownMaterial);
+                    crown.position.y = trunkHeight + layerHeight / 2 + j * (crownHeight * 0.3);
+                    crown.castShadow = true;
+                    crown.receiveShadow = true;
+                    treeGroup.add(crown);
+                }
+                
+                let posX, posZ, validPosition = false, attempts = 0;
+                while (!validPosition && attempts < 50) {
+                    posX = (Math.random() - 0.5) * 80;
+                    posZ = (Math.random() - 0.5) * 80;
+                    if (Math.sqrt(posX * posX + posZ * posZ) > 8) {
+                        validPosition = true;
+                        for (const tree of trees) {
+                            const dist = Math.sqrt(Math.pow(posX - tree.position.x, 2) + Math.pow(posZ - tree.position.z, 2));
+                            if (dist < 5) { validPosition = false; break; }
+                        }
+                    }
+                    attempts++;
+                }
+                
+                treeGroup.position.set(posX, 0, posZ);
+                treeGroup.userData = { type: 'tree', radius: trunkRadius + 0.5 };
+                scene.add(treeGroup);
+                trees.push(treeGroup);
+                obstacles.push(treeGroup);
+            }
+        }
+        
+        function createRocks(count) {
+            for (let i = 0; i < count; i++) {
+                const rockGroup = new THREE.Group();
+                const rockSize = 0.5 + Math.random() * 1.5;
+                const rockGeometry = new THREE.DodecahedronGeometry(rockSize, 0);
+                const rockColors = [0x808080, 0x696969, 0x778899, 0xA9A9A9];
+                const rockMaterial = new THREE.MeshStandardMaterial({ 
+                    color: rockColors[Math.floor(Math.random() * rockColors.length)],
+                    roughness: 0.9, flatShading: true
+                });
+                const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+                rock.position.y = rockSize * 0.5;
+                rock.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                rock.castShadow = true;
+                rockGroup.add(rock);
+                
+                let posX, posZ, validPosition = false, attempts = 0;
+                while (!validPosition && attempts < 50) {
+                    posX = (Math.random() - 0.5) * 80;
+                    posZ = (Math.random() - 0.5) * 80;
+                    if (Math.sqrt(posX * posX + posZ * posZ) > 5) {
+                        validPosition = true;
+                        for (const tree of trees) {
+                            const dist = Math.sqrt(Math.pow(posX - tree.position.x, 2) + Math.pow(posZ - tree.position.z, 2));
+                            if (dist < 3) { validPosition = false; break; }
+                        }
+                    }
+                    attempts++;
+                }
+                
+                rockGroup.position.set(posX, 0, posZ);
+                rockGroup.userData = { type: 'rock', radius: rockSize + 0.3 };
+                scene.add(rockGroup);
+                rocks.push(rockGroup);
+                obstacles.push(rockGroup);
+            }
+        }
+        
+        function createCoins(count) {
+            for (let i = 0; i < count; i++) {
+                const coinGeometry = new THREE.CylinderGeometry(0.4, 0.4, 0.1, 16);
+                const coinMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0xFFD700, metalness: 0.9, roughness: 0.1,
+                    emissive: 0xFFD700, emissiveIntensity: 0.3
+                });
+                const coin = new THREE.Mesh(coinGeometry, coinMaterial);
+                coin.rotation.x = Math.PI / 2;
+                
+                let posX, posZ, validPosition = false, attempts = 0;
+                while (!validPosition && attempts < 50) {
+                    posX = (Math.random() - 0.5) * 70;
+                    posZ = (Math.random() - 0.5) * 70;
+                    validPosition = true;
+                    for (const obs of obstacles) {
+                        const dist = Math.sqrt(Math.pow(posX - obs.position.x, 2) + Math.pow(posZ - obs.position.z, 2));
+                        if (dist < (obs.userData.radius || 2) + 1) { validPosition = false; break; }
+                    }
+                    attempts++;
+                }
+                
+                coin.position.set(posX, 1 + Math.random() * 1.5, posZ);
+                coin.castShadow = true;
+                const coinLight = new THREE.PointLight(0xFFD700, 0.3, 4);
+                coin.add(coinLight);
+                scene.add(coin);
+                coins.push(coin);
+            }
+        }
+        
+        function createEnemies(count) {
+            for (let i = 0; i < count; i++) createEnemy();
+        }
+        
+        function createEnemy() {
+            const type = Math.random() > 0.5 ? ENEMY_TYPES.HUNTER : ENEMY_TYPES.SCOUT;
+            const size = 1 + Math.random() * 0.5;
+            
+            const enemyGeometry = new THREE.BoxGeometry(size, size, size);
+            const enemyMaterial = new THREE.MeshStandardMaterial({ 
+                color: type.color, metalness: 0.4, roughness: 0.5,
+                emissive: type.color, emissiveIntensity: 0.2
+            });
+            
+            const enemy = new THREE.Mesh(enemyGeometry, enemyMaterial);
+            
+            let posX, posZ, validPosition = false, attempts = 0;
+            while (!validPosition && attempts < 100) {
+                posX = (Math.random() - 0.5) * 70;
+                posZ = (Math.random() - 0.5) * 70;
+                const distToPlayer = Math.sqrt(Math.pow(posX - player.position.x, 2) + Math.pow(posZ - player.position.z, 2));
+                if (distToPlayer > 20) {
+                    validPosition = true;
+                    for (const obs of obstacles) {
+                        const dist = Math.sqrt(Math.pow(posX - obs.position.x, 2) + Math.pow(posZ - obs.position.z, 2));
+                        if (dist < (obs.userData.radius || 2) + 2) { validPosition = false; break; }
+                    }
+                }
+                attempts++;
+            }
+            
+            enemy.position.set(posX, size / 2, posZ);
+            enemy.castShadow = true;
+            
+            enemy.userData = {
+                type: type, size: size,
+                speed: type.speed * (0.8 + Math.random() * 0.4) * (1 + level * 0.1),
+                detectionRange: type.detectionRange, behavior: type.behavior,
+                state: 'patrol',
+                patrolTarget: new THREE.Vector3((Math.random() - 0.5) * 40, size / 2, (Math.random() - 0.5) * 40),
+                lastPlayerPos: new THREE.Vector3(), waitTime: 0, hit: false, stuckTime: 0,
+                health: type.health, maxHealth: type.health
+            };
+            
+            // Очі
+            const eyeGeometry = new THREE.SphereGeometry(0.15, 8, 8);
+            const eyeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.25, 0.2, size/2);
+            enemy.add(leftEye);
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(0.25, 0.2, size/2);
+            enemy.add(rightEye);
+            
+            const pupilMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const leftPupil = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), pupilMaterial);
+            leftPupil.position.set(0, 0, 0.1);
+            leftEye.add(leftPupil);
+            const rightPupil = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), pupilMaterial);
+            rightPupil.position.set(0, 0, 0.1);
+            rightEye.add(rightPupil);
+            
+            const detectionLight = new THREE.PointLight(type.color, 0, type.detectionRange);
+            enemy.add(detectionLight);
+            enemy.userData.detectionLight = detectionLight;
+            
+            updateEnemyHealthBar(enemy);
+            scene.add(enemy);
+            enemies.push(enemy);
+        }
+        
+        function checkObstacleCollision(position, radius) {
+            for (const obs of obstacles) {
+                const dist = Math.sqrt(Math.pow(position.x - obs.position.x, 2) + Math.pow(position.z - obs.position.z, 2));
+                if (dist < (obs.userData.radius || 1.5) + radius) return obs;
+            }
+            return null;
+        }
+        
+        function getAvoidanceDirection(position, obstacle) {
+            const toObstacle = new THREE.Vector3();
+            toObstacle.subVectors(obstacle.position, position);
+            toObstacle.y = 0;
+            return new THREE.Vector3(-toObstacle.z, 0, toObstacle.x).normalize();
+        }
+        
+        function updateEnemyAI(enemy) {
+            const data = enemy.userData;
+            const distanceToPlayer = enemy.position.distanceTo(player.position);
+            
+            if (distanceToPlayer < data.detectionRange) {
+                data.state = 'chase';
+                data.detectionLight.intensity = 1;
+                data.lastPlayerPos.copy(player.position);
+            } else {
+                data.state = 'patrol';
+                data.detectionLight.intensity = 0;
+            }
+            
+            if (distanceToPlayer < 6 && data.state === 'chase') {
+                document.getElementById('warning').style.display = 'block';
+            }
+            
+            let targetPosition = new THREE.Vector3();
+            
+            if (data.state === 'chase') {
+                if (data.behavior === 'predict' && playerHistory.length >= 10) {
+                    targetPosition.copy(player.position);
+                    const recent = playerHistory.slice(-10);
+                    const velocity = new THREE.Vector3(
+                        (recent[9].x - recent[0].x) / 10,
+                        0,
+                        (recent[9].z - recent[0].z) / 10
+                    );
+                    targetPosition.x += velocity.x * distanceToPlayer * 1.5;
+                    targetPosition.z += velocity.z * distanceToPlayer * 1.5;
+                } else {
+                    targetPosition.copy(player.position);
+                }
+            } else {
+                targetPosition.copy(data.patrolTarget);
+                if (enemy.position.distanceTo(data.patrolTarget) < 2) {
+                    data.patrolTarget.set((Math.random() - 0.5) * 60, data.size / 2, (Math.random() - 0.5) * 60);
+                }
+            }
+            
+            const direction = new THREE.Vector3();
+            direction.subVectors(targetPosition, enemy.position);
+            direction.y = 0;
+            direction.normalize();
+            
+            let currentSpeed = data.speed * (data.state === 'chase' ? 1.5 : 1);
+            
+            const newPosition = new THREE.Vector3();
+            newPosition.copy(enemy.position);
+            newPosition.x += direction.x * currentSpeed;
+            newPosition.z += direction.z * currentSpeed;
+            
+            const collision = checkObstacleCollision(newPosition, data.size / 2);
+            if (!collision) {
+                enemy.position.copy(newPosition);
+            } else {
+                const avoidDir = getAvoidanceDirection(enemy.position, collision);
+                enemy.position.x += avoidDir.x * currentSpeed;
+                enemy.position.z += avoidDir.z * currentSpeed;
+            }
+            
+            if (direction.length() > 0) {
+                enemy.rotation.y = Math.atan2(direction.x, direction.z);
+            }
+            
+            enemy.position.x = Math.max(-45, Math.min(45, enemy.position.x));
+            enemy.position.z = Math.max(-45, Math.min(45, enemy.position.z));
+            
+            enemy.scale.y = 1 + Math.sin(Date.now() * 0.005) * 0.05;
+            enemy.position.y = data.size / 2 + (data.state === 'chase' ? Math.abs(Math.sin(Date.now() * 0.015)) * 0.3 : 0);
+            
+            const healthBar = enemy.getObjectByName('healthBar');
+            if (healthBar) healthBar.lookAt(camera.position);
+        }
+        
+        function movePlayer() {
+            let speed = keys.Shift ? 0.25 : 0.15;
+            let moveX = 0, moveZ = 0;
+            
+            if (keys.w || keys.ArrowUp) moveZ -= speed;
+            if (keys.s || keys.ArrowDown) moveZ += speed;
+            if (keys.a || keys.ArrowLeft) moveX -= speed;
+            if (keys.d || keys.ArrowRight) moveX += speed;
+            
+            if (isFirstPerson && (moveX !== 0 || moveZ !== 0)) {
+                const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYaw);
+                const right = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYaw);
+                const movement = new THREE.Vector3().addScaledVector(forward, -moveZ).addScaledVector(right, moveX).normalize().multiplyScalar(speed);
+                
+                const newX = player.position.x + movement.x;
+                const newZ = player.position.z + movement.z;
+                const testPos = new THREE.Vector3(newX, player.position.y, newZ);
+                
+                if (!checkObstacleCollision(testPos, 0.5)) {
+                    player.position.x = newX;
+                    player.position.z = newZ;
+                }
+            } else if (!isFirstPerson) {
+                const newX = player.position.x + moveX;
+                const newZ = player.position.z + moveZ;
+                const testPos = new THREE.Vector3(newX, player.position.y, newZ);
+                
+                if (!checkObstacleCollision(testPos, 0.5)) {
+                    player.position.x = newX;
+                    player.position.z = newZ;
+                }
+            }
+            
+            if (keys[' '] && !isJumping) {
+                isJumping = true;
+                velocityY = jumpForce;
+            }
+            
+            if (isJumping) {
+                player.position.y += velocityY;
+                velocityY -= gravity;
+                if (player.position.y <= 0.5) {
+                    player.position.y = 0.5;
+                    isJumping = false;
+                    velocityY = 0;
+                }
+            }
+            
+            player.position.x = Math.max(-45, Math.min(45, player.position.x));
+            player.position.z = Math.max(-45, Math.min(45, player.position.z));
+            
+            playerHistory.push(player.position.clone());
+            if (playerHistory.length > historyLength) playerHistory.shift();
+            
+            player.material.emissiveIntensity = keys.Shift ? 0.5 : 0.2;
+            if (shootCooldown > 0) shootCooldown -= 16;
+        }
+        
+        function updateCamera() {
+            if (isFirstPerson) {
+                camera.position.copy(player.position);
+                camera.position.y += 0.8;
+                camera.rotation.order = 'YXZ';
+                camera.rotation.y = cameraYaw;
+                camera.rotation.x = cameraPitch;
+            } else {
+                camera.position.set(player.position.x, 12, player.position.z + 18);
+                camera.lookAt(player.position);
+            }
+        }
+        
+        function updateMinimap() {
+            minimapCtx.fillStyle = isBossFight ? 'rgba(20, 0, 0, 0.9)' : 'rgba(0, 30, 0, 0.9)';
+            minimapCtx.fillRect(0, 0, 150, 150);
+            
+            const scale = 1.5, offsetX = 75, offsetY = 75;
+            
+            // Дерева
+            minimapCtx.fillStyle = '#228B22';
+            trees.forEach(tree => {
+                const x = (tree.position.x - player.position.x) * scale + offsetX;
+                const y = (tree.position.z - player.position.z) * scale + offsetY;
+                if (x > 0 && x < 150 && y > 0 && y < 150) {
+                    minimapCtx.beginPath();
+                    minimapCtx.arc(x, y, 3, 0, Math.PI * 2);
+                    minimapCtx.fill();
+                }
+            });
+            
+            // Камені
+            minimapCtx.fillStyle = '#808080';
+            rocks.forEach(rock => {
+                const x = (rock.position.x - player.position.x) * scale + offsetX;
+                const y = (rock.position.z - player.position.z) * scale + offsetY;
+                if (x > 0 && x < 150 && y > 0 && y < 150) {
+                    minimapCtx.beginPath();
+                    minimapCtx.arc(x, y, 2, 0, Math.PI * 2);
+                    minimapCtx.fill();
+                }
+            });
+            
+            // Монети
+            minimapCtx.fillStyle = '#FFD700';
+            coins.forEach(coin => {
+                const x = (coin.position.x - player.position.x) * scale + offsetX;
+                const y = (coin.position.z - player.position.z) * scale + offsetY;
+                if (x > 0 && x < 150 && y > 0 && y < 150) {
+                    minimapCtx.beginPath();
+                    minimapCtx.arc(x, y, 3, 0, Math.PI * 2);
+                    minimapCtx.fill();
+                }
+            });
+            
+            // Вороги
+            enemies.forEach(enemy => {
+                minimapCtx.fillStyle = enemy.userData.type === ENEMY_TYPES.HUNTER ? '#e74c3c' : '#9b59b6';
+                const x = (enemy.position.x - player.position.x) * scale + offsetX;
+                const y = (enemy.position.z - player.position.z) * scale + offsetY;
+                if (x > 0 && x < 150 && y > 0 && y < 150) {
+                    minimapCtx.fillRect(x - 3, y - 3, 6, 6);
+                }
+            });
+            
+            // Бос
+            if (boss) {
+                const x = (boss.position.x - player.position.x) * scale + offsetX;
+                const y = (boss.position.z - player.position.z) * scale + offsetY;
+                minimapCtx.fillStyle = '#000';
+                minimapCtx.strokeStyle = '#e74c3c';
+                minimapCtx.lineWidth = 2;
+                minimapCtx.fillRect(x - 8, y - 8, 16, 16);
+                minimapCtx.strokeRect(x - 8, y - 8, 16, 16);
+            }
+            
+            // Гравець
+            minimapCtx.fillStyle = '#3498db';
+            minimapCtx.beginPath();
+            minimapCtx.arc(offsetX, offsetY, 5, 0, Math.PI * 2);
+            minimapCtx.fill();
+            
+            minimapCtx.strokeStyle = 'white';
+            minimapCtx.lineWidth = 2;
+            minimapCtx.strokeRect(0, 0, 150, 150);
+        }
+        
+        function checkCollisions() {
+            let dangerClose = false;
+            
+            // Монети
+            for (let i = coins.length - 1; i >= 0; i--) {
+                const coin = coins[i];
+                coin.rotation.z += 0.05;
+                coin.position.y = 1 + Math.sin(Date.now() * 0.003 + i) * 0.3;
+                
+                if (player.position.distanceTo(coin.position) < 1.2) {
+                    scene.remove(coin);
+                    coins.splice(i, 1);
+                    score++;
+                    document.getElementById('score').textContent = score;
+                    createCoins(1);
+                    if (score % 10 === 0) {
+                        lives = Math.min(lives + 1, 10);
+                        document.getElementById('lives').textContent = lives;
+                    }
+                }
+            }
+            
+            // Вороги
+            for (const enemy of enemies) {
+                updateEnemyAI(enemy);
+                const dist = player.position.distanceTo(enemy.position);
+                if (dist < 6) dangerClose = true;
+                
+                if (dist < 0.5 + enemy.userData.size / 2 && !enemy.userData.hit) {
+                    enemy.userData.hit = true;
+                    lives--;
+                    document.getElementById('lives').textContent = lives;
+                    
+                    player.material.color.setHex(0xff0000);
+                    player.material.emissive.setHex(0xff0000);
+                    
+                    const push = new THREE.Vector3().subVectors(player.position, enemy.position).normalize();
+                    player.position.x += push.x * 4;
+                    player.position.z += push.z * 4;
+                    
+                    setTimeout(() => {
+                        player.material.color.setHex(0x3498db);
+                        player.material.emissive.setHex(0x3498db);
+                        enemy.userData.hit = false;
+                    }, 1000);
+                    
+                    if (lives <= 0) gameOver();
+                }
+            }
+            
+            // Бос
+            if (boss) {
+                updateBossAI();
+                if (player.position.distanceTo(boss.position) < 10) dangerClose = true;
+            }
+            
+            if (!dangerClose) document.getElementById('warning').style.display = 'none';
+        }
+        
+        function levelUp() {
+            level++;
+            document.getElementById('level').textContent = level;
+            
+            // Спавн боса на рівнях 10, 20, 30, 40, 50
+            if (level % 10 === 0 && level <= 50) {
+                spawnBoss();
+            } else {
+                createEnemy();
+                if (level % 2 === 0) createEnemy();
+            }
+            
+            enemies.forEach(e => {
+                e.userData.speed *= 1.08;
+                e.userData.detectionRange *= 1.03;
+            });
+        }
+        
+        function gameOver() {
+            isGameOver = true;
+            document.exitPointerLock();
+            document.getElementById('gameOver').style.display = 'block';
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalKills').textContent = kills;
+            document.getElementById('finalBossKills').textContent = bossKills;
+            document.getElementById('finalLevel').textContent = level;
+            document.getElementById('warning').style.display = 'none';
+            document.getElementById('bossHealth').style.display = 'none';
+        }
+        
+        function restartGame() {
+            coins.forEach(c => scene.remove(c));
+            enemies.forEach(e => scene.remove(e));
+            trees.forEach(t => scene.remove(t));
+            rocks.forEach(r => scene.remove(r));
+            arrows.forEach(a => scene.remove(a));
+            if (boss) scene.remove(boss);
+            
+            coins = []; enemies = []; trees = []; rocks = []; arrows = []; obstacles = [];
+            playerHistory = []; boss = null;
+            
+            score = 0; lives = 5; level = 1; kills = 0; bossKills = 0;
+            gameTime = 0; isGameOver = false; isJumping = false;
+            velocityY = 0; arrowCount = 10; maxArrows = 10;
+            isReloading = false; isBossFight = false;
+            cameraYaw = 0; cameraPitch = 0;
+            
+            setDarkMode(false);
+            
+            if (isFirstPerson) {
+                isFirstPerson = false;
+                player.visible = true;
+                bowPivot.visible = true;
+                fpsBow.visible = false;
+                camera.fov = 75;
+                camera.updateProjectionMatrix();
+                document.getElementById('viewMode').textContent = '3-тя особа';
+            }
+            
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').textContent = lives;
+            document.getElementById('level').textContent = level;
+            document.getElementById('kills').textContent = kills;
+            document.getElementById('bossKills').textContent = bossKills;
+            document.getElementById('time').textContent = gameTime;
+            document.getElementById('arrowCount').textContent = arrowCount;
+            document.getElementById('maxArrows').textContent = maxArrows;
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('bossHealth').style.display = 'none';
+            document.getElementById('reloadBar').style.display = 'none';
+            
+            player.position.set(0, 0.5, 0);
+            player.material.color.setHex(0x3498db);
+            player.material.emissive.setHex(0x3498db);
+            
+            createTrees(25);
+            createRocks(30);
+            createCoins(15);
+            createEnemies(5);
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            if (!isGameOver) {
+                movePlayer();
+                updateCamera();
+                if (!isFirstPerson) updateBowRotation();
+                updateArrows();
+                checkCollisions();
+                updateMinimap();
+            }
+            renderer.render(scene, camera);
+        }
+        
+        init();
+    </script>
+</body>
+</html>
